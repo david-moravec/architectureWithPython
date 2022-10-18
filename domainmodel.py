@@ -14,13 +14,13 @@ class Order:
             raise ValueError("Cannot have negative quantity")
 
     def __eq__(self, o: "Order") -> bool:
-        if self._same_SKU(o):
+        if self.same_SKU(o):
             return self.quantity == o.quantity
 
         return False
         
     def __sub__(self, o: "Order") -> "Order":
-        if not self._same_SKU(o):
+        if not self.same_SKU(o):
             raise ValueError('Incompatible SKU')
 
         difference: int = self.quantity - o.quantity
