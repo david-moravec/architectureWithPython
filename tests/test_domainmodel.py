@@ -1,54 +1,41 @@
-from domainmodel import Order, Batch, SkuErorr
+from domainmodel import Batch, OrderLine
 
 from pytest import raises, fixture
 
 
 def make_batch_orderline(sku, batch_qty, line_qty):
-    return Batch(
-        reference=1, contents=Order(sku=sku, quantity=batch_qty), eta=""
-    ), Order(sku=sku, quantity=line_qty)
+    return Batch(reference="batch_1", sku=sku, quantity=batch_qty, eta=""), OrderLine(
+        id="orderline-1", sku=sku, quantity=line_qty
+    )
 
 
 @fixture
-def order_big():
-    return Order(sku="test", quantity=20)
+def line_big():
+    return OrderLine(id="orderline-big", sku="test", quantity=20)
 
 
 @fixture
-def order_small():
-    return Order(sku="est", quantity=5)
+def line_small():
+    return OrderLine(id="orderline-small", sku="est", quantity=5)
 
 
-def test_order_post_init():
+def test_line_post_init():
     with raises(ValueError):
-        Order(sku="test", quantity=-1)
+        OrderLine(id="lil", sku="test", quantity=-1)
 
 
-def test_order_sub(order_big, order_small):
-    order2 = Order(sku="test", quantity=1)
+def test_line_eq(line_big, line_small):
+    order2 = line_big
 
-    with raises(ValueError):
-        order3 = order_big - order_small
-
-    order3 = order_big - order2
-
-    assert order2.sku == order_big.sku
-    assert order3.sku == order_big.sku
-    assert order3.quantity == order_big.quantity - order2.quantity
+    assert line_small != line_big
+    assert order2 == line_big
 
 
-def test_order_eq(order_big, order_small):
-    order2 = order_big
+def test_batch_add_available_quantity(line_big):
+    b = Batch(reference=1, sku=line_big.sku, quantity=line_big.quantity, eta=None)
+    b.add_available_quantity(line_big)
 
-    assert order_small != order_big
-    assert order2 == order_big
-
-
-def test_batch_add_available_quantity(order_big):
-    b = Batch(reference=1, contents=order_big, eta=None)
-    b.add_available_quantity(order_big)
-
-    assert b.available.quantity == 2 * order_big.quantity
+    assert b.available == 2 * line_big.quantity
 
 
 def test_can_allocate_if_available_greater_than_requested():
@@ -63,7 +50,7 @@ def test_cannot_allocate_if_available_smaller_than_requested():
     assert small_batch.can_allocate(large_order) is False
 
 
-def test_raise_error_if_sku_non_compatible(order_small):
+def test_raise_error_if_sku_non_compatible(line_small):
     batch, _ = make_batch_orderline("TEST", 20, 10)
 
-    assert batch.can_allocate(order_small) is False
+    assert batch.can_allocate(line_small) is False
