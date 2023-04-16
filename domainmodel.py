@@ -47,14 +47,17 @@ class Batch:
     def compatible_sku(self, order: OrderLine) -> bool:
         return self.sku == order.sku
 
+    def is_allocated(self, order: OrderLine) -> bool:
+        return order in self._past_orders
+
     def add_available_quantity(self, to_add: OrderLine) -> None:
         if not self.compatible_sku(to_add):
             return
 
         self.available = self.available + to_add.quantity
 
-    def allocate_order(self, order: OrderLine) -> bool:
-        if order in self._past_orders:
+    def allocate(self, order: OrderLine) -> bool:
+        if self.is_allocated(order):
             return False
 
         self.available = self.available - order.quantity
@@ -62,6 +65,10 @@ class Batch:
         self._past_orders.add(order)
 
         return True
+
+    def deallocate(self, order: OrderLine) -> bool:
+        if self.is_allocated(order):
+            self.available = self.available + order.quantity
 
     def can_allocate(self, order: OrderLine) -> bool:
         if self.compatible_sku(order):

@@ -63,7 +63,7 @@ def test_allocate_order():
         line_qty=10,
     )
 
-    batch.allocate_order(orderline)
+    batch.allocate(orderline)
     assert batch.available == 10
 
 
@@ -74,8 +74,33 @@ def test_ignore_twice_allocate_order():
         line_qty=10,
     )
 
-    batch.allocate_order(orderline)
+    batch.allocate(orderline)
     assert batch.available == 10
 
-    batch.allocate_order(orderline)
+    batch.allocate(orderline)
     assert batch.available == 10
+
+
+def test_deallocate_unallocated_order():
+    batch, orderline = create_batch_orderline(
+        sku="LAMP-IKEA",
+        batch_qty=20,
+        line_qty=10,
+    )
+
+    batch.deallocate(orderline)
+    assert batch.available == 20
+
+
+def test_deallocate_allocated_order():
+    batch, orderline = create_batch_orderline(
+        sku="LAMP-IKEA",
+        batch_qty=20,
+        line_qty=10,
+    )
+
+    batch.allocate(orderline)
+    assert batch.available == 10
+
+    batch.deallocate(orderline)
+    assert batch.available == 20
