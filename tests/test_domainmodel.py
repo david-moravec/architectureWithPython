@@ -4,9 +4,9 @@ from pytest import raises, fixture
 
 
 def create_batch_orderline(sku, batch_qty, line_qty):
-    return Batch(reference="batch_1", sku=sku, quantity=batch_qty, eta=""), OrderLine(
-        id="orderline-1", sku=sku, quantity=line_qty
-    )
+    return Batch(
+        reference="batch_1", sku=sku, purchased_quantity=batch_qty, eta=""
+    ), OrderLine(id="orderline-1", sku=sku, quantity=line_qty)
 
 
 @fixture
@@ -29,13 +29,6 @@ def test_line_eq(line_big, line_small):
 
     assert line_small != line_big
     assert order2 == line_big
-
-
-def test_batch_add_available_quantity(line_big):
-    b = Batch(reference=1, sku=line_big.sku, quantity=line_big.quantity, eta=None)
-    b.add_available_quantity(line_big)
-
-    assert b.available == 2 * line_big.quantity
 
 
 def test_can_allocate_if_available_greater_than_requested():
@@ -64,7 +57,7 @@ def test_allocate_order():
     )
 
     batch.allocate(orderline)
-    assert batch.available == 10
+    assert batch.available_quantity == 10
 
 
 def test_ignore_twice_allocate_order():
@@ -75,10 +68,10 @@ def test_ignore_twice_allocate_order():
     )
 
     batch.allocate(orderline)
-    assert batch.available == 10
+    assert batch.available_quantity == 10
 
     batch.allocate(orderline)
-    assert batch.available == 10
+    assert batch.available_quantity == 10
 
 
 def test_deallocate_unallocated_order():
@@ -89,7 +82,7 @@ def test_deallocate_unallocated_order():
     )
 
     batch.deallocate(orderline)
-    assert batch.available == 20
+    assert batch.available_quantity == 20
 
 
 def test_deallocate_allocated_order():
@@ -100,7 +93,7 @@ def test_deallocate_allocated_order():
     )
 
     batch.allocate(orderline)
-    assert batch.available == 10
+    assert batch.available_quantity == 10
 
     batch.deallocate(orderline)
-    assert batch.available == 20
+    assert batch.available_quantity == 20

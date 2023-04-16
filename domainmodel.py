@@ -36,42 +36,38 @@ class OrderLine:
 
 class Batch:
     def __init__(
-        self, reference: int, sku: str, quantity: int, eta: Optional[date]
+        self, reference: int, sku: str, purchased_quantity: int, eta: Optional[date]
     ) -> None:
         self.reference = reference
-        self.available = quantity
         self.sku = sku
         self.eta = eta
-        self._past_orders: set[OrderLine] = set()
+        self._purchased_quantity = purchased_quantity
+        self._allocations: set[OrderLine] = set()
 
-    def compatible_sku(self, order: OrderLine) -> bool:
-        return self.sku == order.sku
+    @property
+    def allocated_quantity(self) -> int:
+        return sum(line.quantity for line in self._allocations)
 
-    def is_allocated(self, order: OrderLine) -> bool:
-        return order in self._past_orders
+    @property
+    def available_quantity(self) -> int:
+        return self._purchased_quantity - self.allocated_quantity
 
-    def add_available_quantity(self, to_add: OrderLine) -> None:
-        if not self.compatible_sku(to_add):
-            return
-
-        self.available = self.available + to_add.quantity
-
-    def allocate(self, order: OrderLine) -> bool:
-        if self.is_allocated(order):
-            return False
-
-        self.available = self.available - order.quantity
-
-        self._past_orders.add(order)
-
-        return True
+    def allocate(self, order: OrderLine) -> None:
+        if not self._is_allocated(order):
+            self._allocations.add(order)
 
     def deallocate(self, order: OrderLine) -> bool:
-        if self.is_allocated(order):
-            self.available = self.available + order.quantity
+        if self._is_allocated(order):
+            self._allocations.remove(order)
 
     def can_allocate(self, order: OrderLine) -> bool:
-        if self.compatible_sku(order):
-            return self.available >= order.quantity
+        if self._compatible_sku(order):
+            return self.available_quantity >= order.quantity
 
         return False
+
+    def _compatible_sku(self, order: OrderLine) -> bool:
+        return self.sku == order.sku
+
+    def _is_allocated(self, order: OrderLine) -> bool:
+        return order in self._allocations
