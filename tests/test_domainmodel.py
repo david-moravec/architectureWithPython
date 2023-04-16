@@ -64,5 +64,18 @@ def test_allocate_order():
     )
 
     batch.allocate_order(orderline)
+    assert batch.available == 10
 
+
+def test_ignore_twice_allocate_order():
+    batch, orderline = create_batch_orderline(
+        sku="LAMP-IKEA",
+        batch_qty=20,
+        line_qty=10,
+    )
+
+    batch.allocate_order(orderline)
+    assert batch.available == 10
+
+    batch.allocate_order(orderline)
     assert batch.available == 10

@@ -59,7 +59,7 @@ class Batch:
 
         self.available = self.available - order.quantity
 
-        self._past_orders.add(OrderLine)
+        self._past_orders.add(order)
 
         return True
 
