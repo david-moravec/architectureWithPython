@@ -3,7 +3,7 @@ from domainmodel import Batch, OrderLine
 from pytest import raises, fixture
 
 
-def make_batch_orderline(sku, batch_qty, line_qty):
+def create_batch_orderline(sku, batch_qty, line_qty):
     return Batch(reference="batch_1", sku=sku, quantity=batch_qty, eta=""), OrderLine(
         id="orderline-1", sku=sku, quantity=line_qty
     )
@@ -39,18 +39,30 @@ def test_batch_add_available_quantity(line_big):
 
 
 def test_can_allocate_if_available_greater_than_requested():
-    large_batch, small_order = make_batch_orderline("ELEGANT-LAMP", 20, 10)
+    large_batch, small_order = create_batch_orderline("ELEGANT-LAMP", 20, 10)
 
     assert large_batch.can_allocate(small_order)
 
 
 def test_cannot_allocate_if_available_smaller_than_requested():
-    small_batch, large_order = make_batch_orderline("ELEGANT-LAMP", 10, 20)
+    small_batch, large_order = create_batch_orderline("ELEGANT-LAMP", 10, 20)
 
     assert small_batch.can_allocate(large_order) is False
 
 
 def test_raise_error_if_sku_non_compatible(line_small):
-    batch, _ = make_batch_orderline("TEST", 20, 10)
+    batch, _ = create_batch_orderline("TEST", 20, 10)
 
     assert batch.can_allocate(line_small) is False
+
+
+def test_allocate_order():
+    batch, orderline = create_batch_orderline(
+        sku="LAMP-IKEA",
+        batch_qty=20,
+        line_qty=10,
+    )
+
+    batch.allocate_order(orderline)
+
+    assert batch.available == 10

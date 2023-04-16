@@ -28,7 +28,7 @@ class OrderLine:
         return f"SKU = {self.sku}, quantity = {self.quantity}"
 
     def __hash__(self) -> int:
-        return self.orderid
+        return hash(self.id)
 
     def same_SKU(self, o: "OrderLine") -> bool:
         return self.sku == o.sku
